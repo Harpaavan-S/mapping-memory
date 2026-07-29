@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Strength Profiler – Full Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #9b59b6;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --border-radius: 10px;
+            --shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        h1 {
+            color: var(--dark);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 900px;
+            margin: 10px auto;
+        }
+        
+        .input-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .game-card {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+            border-top: 4px solid var(--primary);
+        }
+        
+        .game-card.stroop { border-top-color: #e74c3c; }
+        .game-card.nback { border-top-color: #3498db; }
+        .game-card.pattern { border-top-color: #2ecc71; }
+        .game-card.spatial { border-top-color: #9b59b6; }
+        
+        .game-title {
+            font-size: 1.4rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .band-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .band-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        .channel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .derived-metrics {
+            background: #eef2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+        
+        .derived-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .derived-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .generate-btn {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 40px auto;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .report-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .games-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .game-result {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        
+        .game-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .strength-index {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 10px;
+            background: #a29bfe;
+            color: white;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin: 40px 0;
+        }
+        
+        .game-analysis {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f1f9ff;
+            border-radius: var(--border-radius);
+        }
+        
+        .game-analysis h3 {
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .analysis-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .analysis-item h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .strength-profile {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 35px;
+            border-radius: var(--border-radius);
+            margin-top: 40px;
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .input-panel {
+                grid-template-columns: 1fr;
+            }
+            .channel-grid {
+                grid-template-columns: 1fr;
+            }
+            .derived-metrics {
+                grid-template-columns: 1fr;
+            }
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Cognitive Strength Profiler</h1>
+            <p class="subtitle">Enter average band powers (µV²) for each game. The system will identify your dominant cognitive style and explain the significance of each game's brainwave activity.</p>
+        </header>
+
+        <div class="input-panel" id="gameInputs">
+            <!-- Stroop Card -->
+            <div class="game-card stroop" data-game="stroop">
+                <div class="game-title">🎯 Stroop Test <span style="font-size:0.9rem; color:#666;">(Inhibition & Focus)</span></div>
+                <div class="band-section">
+                    <div class="band-title">Theta (4–8 Hz)</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 θ</label><input type="number" step="any" class="af7-theta" value="18.34"></div>
+                        <div class="form-group"><label>AF8 θ</label><input type="number" step="any" class="af8-theta" value="21.99"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Alpha (8–13 Hz)</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 α</label><input type="number" step="any" class="af7-alpha" value="14.84"></div>
+                        <div class="form-group"><label>AF8 α</label><input type="number" step="any" class="af8-alpha" value="14.14"></div>
+                        <div class="form-group"><label>TP9 α</label><input type="number" step="any" class="tp9-alpha" value="20.85"></div>
+                        <div class="form-group"><label>TP10 α</label><input type="number" step="any" class="tp10-alpha" value="13.74"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Beta (13–30 Hz)</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 β</label><input type="number" step="any" class="af7-beta" value="14.60"></div>
+                        <div class="form-group"><label>AF8 β</label><input type="number" step="any" class="af8-beta" value="14.70"></div>
+                        <div class="form-group"><label>TP9 β</label><input type="number" step="any" class="tp9-beta" value="24.09"></div>
+                        <div class="form-group"><label>TP10 β</label><input type="number" step="any" class="tp10-beta" value="15.03"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Gamma (30–45 Hz)</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 γ</label><input type="number" step="any" class="af7-gamma" value="2.00"></div>
+                        <div class="form-group"><label>AF8 γ</label><input type="number" step="any" class="af8-gamma" value="1.66"></div>
+                        <div class="form-group"><label>TP9 γ</label><input type="number" step="any" class="tp9-gamma" value="11.42"></div>
+                        <div class="form-group"><label>TP10 γ</label><input type="number" step="any" class="tp10-gamma" value="2.21"></div>
+                    </div>
+                </div>
+                <div class="derived-metrics">
+                    <div class="derived-item"><span class="derived-label">Frontal β avg:</span> <span class="frontal-beta-avg">14.65</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal γ avg:</span> <span class="frontal-gamma-avg">1.83</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal θ avg:</span> <span class="frontal-theta-avg">20.17</span></div>
+                    <div class="derived-item"><span class="derived-label">Posterior α avg:</span> <span class="posterior-alpha-avg">17.30</span></div>
+                </div>
+            </div>
+            <!-- N‑Back Card -->
+            <div class="game-card nback" data-game="nback">
+                <div class="game-title">🔢 N‑Back Game <span style="font-size:0.9rem; color:#666;">(Working Memory)</span></div>
+                <div class="band-section">
+                    <div class="band-title">Theta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 θ</label><input type="number" step="any" class="af7-theta" value="22.15"></div>
+                        <div class="form-group"><label>AF8 θ</label><input type="number" step="any" class="af8-theta" value="24.80"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Alpha</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 α</label><input type="number" step="any" class="af7-alpha" value="15.20"></div>
+                        <div class="form-group"><label>AF8 α</label><input type="number" step="any" class="af8-alpha" value="14.90"></div>
+                        <div class="form-group"><label>TP9 α</label><input type="number" step="any" class="tp9-alpha" value="15.50"></div>
+                        <div class="form-group"><label>TP10 α</label><input type="number" step="any" class="tp10-alpha" value="14.30"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Beta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 β</label><input type="number" step="any" class="af7-beta" value="16.80"></div>
+                        <div class="form-group"><label>AF8 β</label><input type="number" step="any" class="af8-beta" value="17.50"></div>
+                        <div class="form-group"><label>TP9 β</label><input type="number" step="any" class="tp9-beta" value="18.20"></div>
+                        <div class="form-group"><label>TP10 β</label><input type="number" step="any" class="tp10-beta" value="17.90"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Gamma</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 γ</label><input type="number" step="any" class="af7-gamma" value="3.20"></div>
+                        <div class="form-group"><label>AF8 γ</label><input type="number" step="any" class="af8-gamma" value="3.50"></div>
+                        <div class="form-group"><label>TP9 γ</label><input type="number" step="any" class="tp9-gamma" value="5.10"></div>
+                        <div class="form-group"><label>TP10 γ</label><input type="number" step="any" class="tp10-gamma" value="4.80"></div>
+                    </div>
+                </div>
+                <div class="derived-metrics">
+                    <div class="derived-item"><span class="derived-label">Frontal β avg:</span> <span class="frontal-beta-avg">17.15</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal γ avg:</span> <span class="frontal-gamma-avg">3.35</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal θ avg:</span> <span class="frontal-theta-avg">23.48</span></div>
+                    <div class="derived-item"><span class="derived-label">Posterior α avg:</span> <span class="posterior-alpha-avg">14.90</span></div>
+                </div>
+            </div>
+            <!-- Pattern Card -->
+            <div class="game-card pattern" data-game="pattern">
+                <div class="game-title">🌀 Pattern Recognition <span style="font-size:0.9rem; color:#666;">(Implicit Learning)</span></div>
+                <div class="band-section">
+                    <div class="band-title">Theta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 θ</label><input type="number" step="any" class="af7-theta" value="16.80"></div>
+                        <div class="form-group"><label>AF8 θ</label><input type="number" step="any" class="af8-theta" value="17.50"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Alpha</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 α</label><input type="number" step="any" class="af7-alpha" value="19.00"></div>
+                        <div class="form-group"><label>AF8 α</label><input type="number" step="any" class="af8-alpha" value="18.70"></div>
+                        <div class="form-group"><label>TP9 α</label><input type="number" step="any" class="tp9-alpha" value="19.25"></div>
+                        <div class="form-group"><label>TP10 α</label><input type="number" step="any" class="tp10-alpha" value="18.90"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Beta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 β</label><input type="number" step="any" class="af7-beta" value="15.40"></div>
+                        <div class="form-group"><label>AF8 β</label><input type="number" step="any" class="af8-beta" value="15.80"></div>
+                        <div class="form-group"><label>TP9 β</label><input type="number" step="any" class="tp9-beta" value="16.20"></div>
+                        <div class="form-group"><label>TP10 β</label><input type="number" step="any" class="tp10-beta" value="16.00"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Gamma</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 γ</label><input type="number" step="any" class="af7-gamma" value="4.50"></div>
+                        <div class="form-group"><label>AF8 γ</label><input type="number" step="any" class="af8-gamma" value="4.70"></div>
+                        <div class="form-group"><label>TP9 γ</label><input type="number" step="any" class="tp9-gamma" value="6.20"></div>
+                        <div class="form-group"><label>TP10 γ</label><input type="number" step="any" class="tp10-gamma" value="5.90"></div>
+                    </div>
+                </div>
+                <div class="derived-metrics">
+                    <div class="derived-item"><span class="derived-label">Frontal β avg:</span> <span class="frontal-beta-avg">15.60</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal γ avg:</span> <span class="frontal-gamma-avg">4.60</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal θ avg:</span> <span class="frontal-theta-avg">17.15</span></div>
+                    <div class="derived-item"><span class="derived-label">Posterior α avg:</span> <span class="posterior-alpha-avg">19.08</span></div>
+                </div>
+            </div>
+            <!-- Spatial Card -->
+            <div class="game-card spatial" data-game="spatial">
+                <div class="game-title">🧩 Spatial Memory <span style="font-size:0.9rem; color:#666;">(Visuospatial)</span></div>
+                <div class="band-section">
+                    <div class="band-title">Theta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 θ</label><input type="number" step="any" class="af7-theta" value="24.30"></div>
+                        <div class="form-group"><label>AF8 θ</label><input type="number" step="any" class="af8-theta" value="26.10"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Alpha</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 α</label><input type="number" step="any" class="af7-alpha" value="16.20"></div>
+                        <div class="form-group"><label>AF8 α</label><input type="number" step="any" class="af8-alpha" value="15.80"></div>
+                        <div class="form-group"><label>TP9 α</label><input type="number" step="any" class="tp9-alpha" value="14.20"></div>
+                        <div class="form-group"><label>TP10 α</label><input type="number" step="any" class="tp10-alpha" value="12.80"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Beta</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 β</label><input type="number" step="any" class="af7-beta" value="18.90"></div>
+                        <div class="form-group"><label>AF8 β</label><input type="number" step="any" class="af8-beta" value="19.40"></div>
+                        <div class="form-group"><label>TP9 β</label><input type="number" step="any" class="tp9-beta" value="20.10"></div>
+                        <div class="form-group"><label>TP10 β</label><input type="number" step="any" class="tp10-beta" value="19.70"></div>
+                    </div>
+                </div>
+                <div class="band-section">
+                    <div class="band-title">Gamma</div>
+                    <div class="channel-grid">
+                        <div class="form-group"><label>AF7 γ</label><input type="number" step="any" class="af7-gamma" value="5.80"></div>
+                        <div class="form-group"><label>AF8 γ</label><input type="number" step="any" class="af8-gamma" value="6.20"></div>
+                        <div class="form-group"><label>TP9 γ</label><input type="number" step="any" class="tp9-gamma" value="7.50"></div>
+                        <div class="form-group"><label>TP10 γ</label><input type="number" step="any" class="tp10-gamma" value="7.10"></div>
+                    </div>
+                </div>
+                <div class="derived-metrics">
+                    <div class="derived-item"><span class="derived-label">Frontal β avg:</span> <span class="frontal-beta-avg">19.15</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal γ avg:</span> <span class="frontal-gamma-avg">6.00</span></div>
+                    <div class="derived-item"><span class="derived-label">Frontal θ avg:</span> <span class="frontal-theta-avg">25.20</span></div>
+                    <div class="derived-item"><span class="derived-label">Posterior α avg:</span> <span class="posterior-alpha-avg">13.50</span></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateStrengthProfile()">🔍 Identify Cognitive Strengths</button>
+
+        <div id="reportContainer" class="report-container">
+            <h2 style="text-align:center; margin-bottom:30px;">🧬 Your Cognitive Strength Profile</h2>
+            
+            <div class="games-comparison" id="gamesComparison"></div>
+            
+            <div class="chart-container">
+                <canvas id="strengthChart"></canvas>
+            </div>
+
+            <!-- New detailed game analysis section -->
+            <div class="game-analysis" id="gameAnalysis">
+                <h3>📊 Game‑by‑Game Brainwave Analysis</h3>
+                <div class="analysis-grid" id="analysisGrid"></div>
+            </div>
+            
+            <div class="strength-profile" id="strengthProfile">
+                <!-- Filled by JavaScript -->
+            </div>
+            
+            <div class="footer-note">
+                <p>Strength indices are normalized relative to your own average across all games. Higher index = more optimized neural engagement in that domain.</p>
+                <p>Analysis based on established EEG correlates: Theta (working memory), Alpha (idling), Beta (cognitive control), Gamma (feature binding).</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real‑time derived metric updates
+        function updateDerived(card) {
+            try {
+                const af7t = parseFloat(card.querySelector('.af7-theta')?.value) || 0;
+                const af8t = parseFloat(card.querySelector('.af8-theta')?.value) || 0;
+                const af7a = parseFloat(card.querySelector('.af7-alpha')?.value) || 0;
+                const af8a = parseFloat(card.querySelector('.af8-alpha')?.value) || 0;
+                const tp9a = parseFloat(card.querySelector('.tp9-alpha')?.value) || 0;
+                const tp10a = parseFloat(card.querySelector('.tp10-alpha')?.value) || 0;
+                const af7b = parseFloat(card.querySelector('.af7-beta')?.value) || 0;
+                const af8b = parseFloat(card.querySelector('.af8-beta')?.value) || 0;
+                const af7g = parseFloat(card.querySelector('.af7-gamma')?.value) || 0;
+                const af8g = parseFloat(card.querySelector('.af8-gamma')?.value) || 0;
+
+                const frontalTheta = (af7t + af8t) / 2;
+                const posteriorAlpha = (tp9a + tp10a) / 2;
+                const frontalBeta = (af7b + af8b) / 2;
+                const frontalGamma = (af7g + af8g) / 2;
+
+                card.querySelector('.frontal-theta-avg').textContent = frontalTheta.toFixed(2);
+                card.querySelector('.posterior-alpha-avg').textContent = posteriorAlpha.toFixed(2);
+                card.querySelector('.frontal-beta-avg').textContent = frontalBeta.toFixed(2);
+                card.querySelector('.frontal-gamma-avg').textContent = frontalGamma.toFixed(2);
+            } catch (e) {
+                console.warn("UpdateDerived error:", e);
+            }
+        }
+
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => updateDerived(card)));
+            updateDerived(card);
+        });
+
+        // Main report generation with enhanced explanations
+        function generateStrengthProfile() {
+            try {
+                const cards = document.querySelectorAll('.game-card');
+                if (cards.length === 0) {
+                    alert("No game cards found. Please check the HTML structure.");
+                    return;
+                }
+
+                const games = [];
+                cards.forEach(card => {
+                    const gameName = card.querySelector('.game-title')?.childNodes[0]?.nodeValue?.trim() || "Unknown";
+                    const color = window.getComputedStyle(card).borderTopColor;
+
+                    // Safely parse values
+                    const af7t = parseFloat(card.querySelector('.af7-theta')?.value) || 0;
+                    const af8t = parseFloat(card.querySelector('.af8-theta')?.value) || 0;
+                    const tp9a = parseFloat(card.querySelector('.tp9-alpha')?.value) || 0;
+                    const tp10a = parseFloat(card.querySelector('.tp10-alpha')?.value) || 0;
+                    const af7b = parseFloat(card.querySelector('.af7-beta')?.value) || 0;
+                    const af8b = parseFloat(card.querySelector('.af8-beta')?.value) || 0;
+                    const af7g = parseFloat(card.querySelector('.af7-gamma')?.value) || 0;
+                    const af8g = parseFloat(card.querySelector('.af8-gamma')?.value) || 0;
+
+                    const frontalTheta = (af7t + af8t) / 2;
+                    const posteriorAlpha = (tp9a + tp10a) / 2;
+                    const frontalBeta = (af7b + af8b) / 2;
+                    const frontalGamma = (af7g + af8g) / 2;
+
+                    games.push({
+                        name: gameName,
+                        color: color,
+                        frontalTheta,
+                        posteriorAlpha,
+                        frontalBeta,
+                        frontalGamma
+                    });
+                });
+
+                // Strength indices
+                const stroopIndex = games[0].frontalBeta;
+                const nbackIndex = games[1].frontalTheta;
+                const patternIndex = games[2].frontalGamma;
+                const spatialIndex = games[3].posteriorAlpha > 0 ? 1 / games[3].posteriorAlpha : 0;
+
+                const indices = [stroopIndex, nbackIndex, patternIndex, spatialIndex];
+                const meanIndex = indices.reduce((a, b) => a + b, 0) / indices.length;
+
+                // Normalize
+                const normIndices = indices.map(val => meanIndex > 0 ? val / meanIndex : 1);
+                const gameNames = ["Stroop", "N‑Back", "Pattern", "Spatial"];
+                const gameColors = ["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"];
+
+                // Build comparison cards
+                let gamesHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    gamesHTML += `
+                        <div class="game-result">
+                            <div class="game-name">${gameNames[i]}</div>
+                            <div class="strength-index" style="color: ${gameColors[i]}">${normIndices[i].toFixed(2)}</div>
+                            <div class="badge">${normIndices[i] > 1 ? 'Strength' : 'Baseline'}</div>
+                            <div style="margin-top:15px; font-size:0.9rem;">
+                                Raw: ${i === 0 ? games[0].frontalBeta.toFixed(2) + ' β' : 
+                                         i === 1 ? games[1].frontalTheta.toFixed(2) + ' θ' :
+                                         i === 2 ? games[2].frontalGamma.toFixed(2) + ' γ' :
+                                         (1 / games[3].posteriorAlpha).toFixed(2) + ' (inv α)'}
+                            </div>
+                        </div>
+                    `;
+                }
+                document.getElementById('gamesComparison').innerHTML = gamesHTML;
+
+                // Safely destroy previous chart if it exists and is a Chart instance
+                if (window.strengthChart && typeof window.strengthChart.destroy === 'function') {
+                    window.strengthChart.destroy();
+                }
+
+                // Create new chart
+                const ctx = document.getElementById('strengthChart').getContext('2d');
+                if (!ctx) {
+                    alert("Canvas element not found.");
+                    return;
+                }
+                window.strengthChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: gameNames,
+                        datasets: [{
+                            label: 'Normalized Strength Index',
+                            data: normIndices,
+                            backgroundColor: gameColors,
+                            borderColor: gameColors,
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Strength (relative to own mean)' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const i = ctx.dataIndex;
+                                        return `${gameNames[i]}: ${normIndices[i].toFixed(2)} (raw ${i === 0 ? 'β' : i === 1 ? 'θ' : i === 2 ? 'γ' : '1/α'} = ${(i === 0 ? games[0].frontalBeta : i === 1 ? games[1].frontalTheta : i === 2 ? games[2].frontalGamma : (1 / games[3].posteriorAlpha).toFixed(2)).toFixed(2)})`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Generate detailed analysis for each game
+                const analysisItems = [
+                    {
+                        name: "Stroop Test (Inhibitory Control)",
+                        band: "Frontal Beta",
+                        value: games[0].frontalBeta.toFixed(2),
+                        interpretation: "Frontal beta reflects cognitive control and focused attention. This value indicates how effectively your brain suppresses automatic responses. Higher relative beta suggests efficient engagement of executive networks."
+                    },
+                    {
+                        name: "N‑Back Game (Working Memory)",
+                        band: "Frontal Theta",
+                        value: games[1].frontalTheta.toFixed(2),
+                        interpretation: "Frontal theta increases with working memory load. Your theta activity shows how well your brain manages information updating. Moderate to high theta is typical of active memory maintenance."
+                    },
+                    {
+                        name: "Pattern Recognition (Implicit Learning)",
+                        band: "Frontal Gamma",
+                        value: games[2].frontalGamma.toFixed(2),
+                        interpretation: "Gamma oscillations are linked to feature binding and unconscious pattern detection. Higher gamma suggests your brain is adept at forming new associations without explicit awareness."
+                    },
+                    {
+                        name: "Spatial Memory (Visuospatial Processing)",
+                        band: "Posterior Alpha (suppression)",
+                        value: games[3].posteriorAlpha.toFixed(2),
+                        interpretation: "Posterior alpha decreases (suppresses) when visual areas are engaged. Your alpha value of " + games[3].posteriorAlpha.toFixed(2) + " µV² reflects the degree of visual‑spatial activation – lower values mean stronger engagement."
+                    }
+                ];
+
+                let analysisHTML = '';
+                analysisItems.forEach(item => {
+                    analysisHTML += `
+                        <div class="analysis-item">
+                            <h4>${item.name}</h4>
+                            <p><strong>${item.band}:</strong> ${item.value} µV²</p>
+                            <p>${item.interpretation}</p>
+                        </div>
+                    `;
+                });
+                document.getElementById('analysisGrid').innerHTML = analysisHTML;
+
+                // Find dominant strength
+                const maxIndex = Math.max(...normIndices);
+                const maxIdx = normIndices.indexOf(maxIndex);
+                const strengthNames = ["inhibitory control", "working memory", "implicit learning", "spatial processing"];
+                const strengthDesc = {
+                    "Stroop": "You excel at tasks requiring focus and inhibition – your brain efficiently engages cognitive control networks.",
+                    "N‑Back": "Your working memory is a standout – frontal theta is optimally engaged without excessive strain.",
+                    "Pattern": "You have a natural gift for implicit learning and pattern detection – gamma activity suggests efficient feature binding.",
+                    "Spatial": "Your spatial processing is highly efficient – strong posterior alpha suppression indicates effortless visual‑spatial engagement."
+                };
+
+                const profileHTML = `
+                    <h3 style="color:white; margin-top:0;">🏆 Your Dominant Cognitive Strength</h3>
+                    <p style="font-size:1.3rem; margin:10px 0;"><strong>${gameNames[maxIdx]}</strong> – ${strengthNames[maxIdx]}</p>
+                    <p>${strengthDesc[gameNames[maxIdx]]}</p>
+                    <p style="margin-top:20px;">Your strength index of <strong>${maxIndex.toFixed(2)}</strong> is the highest among all four tasks, indicating that your brain shows the most optimized pattern in this domain.</p>
+                `;
+                document.getElementById('strengthProfile').innerHTML = profileHTML;
+
+                // Show report container
+                document.getElementById('reportContainer').style.display = 'block';
+                document.getElementById('reportContainer').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert("An error occurred while generating the report. Please check the browser console (F12) for details, and verify that all input fields contain valid numbers.\n\nError: " + error.message);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
