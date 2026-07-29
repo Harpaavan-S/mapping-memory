@@ -7,4 +7,4 @@ To run this on your laptop, you will need to have the Muse EEG headset. Also you
 ## AI Acknowledgement
 I used ChatGPT to help with some code debugging as there was not a lot of resources for coding with EEG headsets. Otherwise all ideas are original and the games were made completely by me.
 ## Demo
-There is a video about my project available in this repository for you to view. Enjoy!
+Here is a video about my project that you can view: https://drive.google.com/file/d/1rElfeVWOOZh3lVSDVrou673Vj4_dcACt/view
